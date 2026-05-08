@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Authentication\Interfaces\IOtpService.cs" />
+    <Compile Remove="Authentication\Interfaces\IUserRepository.cs" />
+    <Compile Remove="Notifications\Interfaces\IEmailService.cs" />
+    <Compile Remove="Notifications\Interfaces\ISmsService.cs" />
+    <Compile Remove="Notifications\Interfaces\ITemplateRenderer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HealthUrWealth.Domain\HealthUrWealth.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\Queries\" />
+  </ItemGroup>
+
+</Project>

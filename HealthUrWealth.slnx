@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="HealthUrWealth.Api/HealthUrWealth.Api.csproj" />
+  <Project Path="HealthUrWealth.Database.Migration/HealthUrWealth.Database.Migration.sqlproj" Id="d16b9a17-88f0-4631-a2df-5928e98b7683">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="HealthUrWealth.Domain/HealthUrWealth.Domain.csproj" />
+  <Project Path="HealthUrWealth.Infrastructure/HealthUrWealth.Infrastructure.csproj" />
+  <Project Path="HealthUrWelath.Application/HealthUrWelath.Application.csproj" />
+</Solution>

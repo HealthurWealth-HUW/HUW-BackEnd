@@ -1,0 +1,12 @@
+@HealthUrWealth.Api_HostAddress = http://localhost:5298
+
+GET {{HealthUrWealth.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+### Discovery Home
+GET {{HealthUrWealth.Api_HostAddress}}/api/v1/discovery/home
+Accept: application/json
+
+### Navigation
+GET https://localhost:7238/api/v1/navigation
+Accept: application/json

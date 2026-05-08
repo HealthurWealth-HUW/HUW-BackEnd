@@ -1,0 +1,19 @@
+# .NET build folders
+bin/
+obj/
+
+# publish output
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# logs
+*.log
+
+# node packages (if React frontend)
+node_modules/
+dist/
+build/
