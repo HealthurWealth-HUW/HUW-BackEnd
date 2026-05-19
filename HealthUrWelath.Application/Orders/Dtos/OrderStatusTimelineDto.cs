@@ -16,8 +16,8 @@ namespace HealthUrWelath.Application.Orders.Dtos
 
         public DateTime? CancelledDate { get; init; }
 
-        public int OrderCurrentStatusId { get; init; }
-        public string OrderCurrentStatus => ((OrderStatus)OrderCurrentStatusId).ToString();
+        public int OrderCurrentStatus { get; init; }
+        public string OrderCurrentStatusText => ((OrderStatus)OrderCurrentStatus).ToString();
     }
 
 }
