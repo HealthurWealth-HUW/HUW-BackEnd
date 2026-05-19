@@ -20,5 +20,4 @@ namespace HealthUrWelath.Application.Orders.Dtos
         public string OrderCurrentStatus => ((OrderStatus)OrderCurrentStatusId).ToString();
     }
 
-    }
 }
