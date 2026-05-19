@@ -1,4 +1,6 @@
-﻿namespace HealthUrWelath.Application.Orders.Dtos
+﻿using HealthUrWelath.Application.Common.Enums;
+
+namespace HealthUrWelath.Application.Orders.Dtos
 {
     public sealed class OrderStatusTimelineDto
     {
@@ -14,6 +16,9 @@
 
         public DateTime? CancelledDate { get; init; }
 
-        public int OrderCurrentStatus { get; init; }
+        public int OrderCurrentStatusId { get; init; }
+        public string OrderCurrentStatus => ((OrderStatus)OrderCurrentStatusId).ToString();
+    }
+
     }
 }

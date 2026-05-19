@@ -106,6 +106,18 @@ namespace HealthUrWealth.Api.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpPost("remove-coupon")]
+        public async Task<IActionResult> RemoveCoupon([FromBody] RemoveCouponRequest request)
+        {
+            if (request.CartId <= 0)
+                return BadRequest("CartId is required");
+
+            await _mediator.Send(new RemoveCoupon.Command(request.CartId));
+
+            return Ok(new { Success = true, Message = "Coupon removed" });
+        }
+
         [HttpPost("uploadprescriptions")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadPrescriptions(

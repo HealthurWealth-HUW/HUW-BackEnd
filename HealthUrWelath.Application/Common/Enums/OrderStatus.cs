@@ -2,15 +2,19 @@
 {
     public enum OrderStatus
     {
-        Pending = 1,
-        Approved = 2,
-        ReadyToDispatch = 3,
-        Dispatched = 4,
-        Delivered = 5,
-        Rejected = 6,
-        Cancelled = 7,
-        Returned = 8,
-        Refund = 9,
-        Checkout = 10
+        Cancelled = 1,
+        Pending = 0,
+        Delivered = 3,
+        Refund = 4,
+        Returns = 5,
+        Readytoship = 6,
+        StockPending = 7,
+        WaitingforPickup = 8,
+        Dispatched = 9,
+        Checkout = 10,
+        Closed = 11,
+        Downloaded = 12,
+        Cashbackassigned = 13
+
     }
 }

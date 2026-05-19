@@ -18,6 +18,8 @@ namespace HealthUrWelath.Application.Cart.Interfaces
 
         Task<ApplyCouponResultDto> ApplyCouponAsync(long cartId, long? userId, string couponCode);
 
+        Task RemoveCouponAsync(long cartId, long userId);
+
         Task<int> InsertPrescriptionsAsync(long userId, long CartId, List<string> imageUrls);
     }
 }

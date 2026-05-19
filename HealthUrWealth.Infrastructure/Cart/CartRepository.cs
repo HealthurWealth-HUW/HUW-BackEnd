@@ -114,5 +114,11 @@ namespace HealthUrWealth.Infrastructure.Cart
 
             return result;
         }
+
+        public Task RemoveCouponAsync(long cartId, long userId)
+            => _db.ExecuteAsync(
+                "SP_Cart_RemoveCoupon",
+                new { CartId = cartId, UserId = userId },
+                commandType: CommandType.StoredProcedure);
     }
 }
