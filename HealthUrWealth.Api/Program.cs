@@ -96,6 +96,9 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenFactory, JwtTokenFactory>();
 builder.Services.AddScoped<IUserContext, UserContext>();
 
+// App settings abstraction implementation
+builder.Services.AddSingleton<IAppSettings, AppSettings>();
+
 builder.Services.AddScoped<ICurrencyContext, CurrencyContext>();
 
 builder.Services.AddScoped<IImpersonationAuditRepository, ImpersonationAuditRepository>();

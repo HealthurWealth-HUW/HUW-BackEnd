@@ -21,17 +21,20 @@ namespace HealthUrWelath.Application.Authentication.Commands
             private readonly IUserRepository _users;
             private readonly IMediator _mediator; // reuse CQRS
             private readonly IOtpRepository _otp;
+            private readonly IAppSettings _appSettings;
 
             public VerifyOtpHandler(
                 IJwtTokenFactory jwt,
                 IUserRepository users,
                 IMediator mediator,
-                IOtpRepository otp)
+                IOtpRepository otp,
+                IAppSettings appSettings)
             {
                 _jwt = jwt;
                 _users = users;
                 _mediator = mediator;
                 _otp = otp;
+                _appSettings = appSettings;
             }
 
             public async Task<AuthTokenDto> Handle(
@@ -42,11 +45,11 @@ namespace HealthUrWelath.Application.Authentication.Commands
                 var isTempOtp = false;
 
                 // Check for configured temporary OTP first (useful for support/testing)
-                var tempOtpCfg = Environment.GetEnvironmentVariable("TempOtp:SupportOtp") ?? string.Empty;
+                var tempOtpCfg = _appSettings?.Get("TempOtp:SupportOtp") ?? string.Empty;
 
-                var allowedOtps = tempOtpCfg.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var allowedOtps = tempOtpCfg.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(s => s.Trim()).ToArray();
 
-                if (allowedOtps.Contains(cmd.Otp))
+                if (allowedOtps.Any(s => string.Equals(s, cmd.Otp, StringComparison.OrdinalIgnoreCase)))
                 {
                     var uid = await _users.GetUserIdByMobileAsync(cmd.Mobile);
                     if (!uid.HasValue)
