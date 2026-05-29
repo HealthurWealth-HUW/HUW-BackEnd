@@ -38,12 +38,35 @@ namespace HealthUrWelath.Application.Authentication.Commands
                 Command cmd,
                 CancellationToken ct)
             {
-                var userId = await _otp.ValidateAsync(cmd.Mobile, cmd.Otp);
+                long userId = 0;
+                var isTempOtp = false;
+
+                // Check for configured temporary OTP first (useful for support/testing)
+                var tempOtpCfg = Environment.GetEnvironmentVariable("TempOtp:SupportOtp") ?? string.Empty;
+
+                var allowedOtps = tempOtpCfg.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (allowedOtps.Contains(cmd.Otp))
+                {
+                    var uid = await _users.GetUserIdByMobileAsync(cmd.Mobile);
+                    if (!uid.HasValue)
+                        throw new UnauthorizedAccessException("Invalid or expired OTP");
+
+                    userId = uid.Value;
+                    isTempOtp = true;
+                }
+                else
+                {
+                    // Fall back to normal OTP validation
+                    userId = await _otp.ValidateAsync(cmd.Mobile, cmd.Otp);
+                }
+
                 if (userId == 0)
                     throw new UnauthorizedAccessException("Invalid or expired OTP");
 
 
-                if (cmd.GuestId.HasValue && cmd.GuestId != Guid.Empty)
+                // Merge guest cart only when not using temporary OTP
+                if (!isTempOtp && cmd.GuestId.HasValue && cmd.GuestId != Guid.Empty)
                 {
                     await _mediator.Send(
                         new MergeCart.Command(
