@@ -137,6 +137,9 @@ builder.Services.AddHttpClient<IBluedartService, BluedartService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Cache Configuration
+builder.Services.Configure<CacheOptions>(builder.Configuration.GetSection("Cache"));
+builder.Services.AddSingleton<ICacheConfigurationManager, CacheConfigurationManager>();
 
 //Cache 
 builder.Services.AddMemoryCache();

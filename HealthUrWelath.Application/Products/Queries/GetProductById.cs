@@ -25,8 +25,8 @@ public static class GetProductById
             CancellationToken ct)
         {
             return _cache.GetOrCreateAsync(
+                featureName: "Products",
                 key: $"product:{request.ProductId}:v1",
-                ttl: TimeSpan.FromMinutes(15),
                 factory: () => _repository.GetProductByIdAsync(request.ProductId));
         }
     }

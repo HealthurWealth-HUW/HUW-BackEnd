@@ -29,8 +29,8 @@ public static class GetNavigation
             CancellationToken ct)
         {
             return await _cache.GetOrCreateAsync(
+                featureName: "Navigation",
                 key: "navigation:v1",
-                ttl: TimeSpan.FromMinutes(60),
                 factory: () => _repository.GetNavigationAsync());
         }
     }
