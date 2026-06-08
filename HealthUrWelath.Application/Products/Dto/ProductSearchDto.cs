@@ -9,6 +9,7 @@
         public string Brand { get; init; }
 
         public decimal ProductCost { get; init; }
+        public int Quantity { get; init; }
 
         public string ProductImgUrl { get; init; }
 
