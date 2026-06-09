@@ -6,6 +6,8 @@
         public string ProductName { get; init; }
 
         public decimal ProductCost { get; init; }
+        public int Quantity { get; init; }
+
         public decimal ProductOriginalCost { get; init; }
         public decimal ProductDiscountPercentage { get; init; }
         public decimal ProductDiscountCost { get; init; }
