@@ -2,6 +2,7 @@
 using HealthUrWelath.Application.Checkout.Dtos;
 using HealthUrWelath.Application.Checkout.Interfaces;
 using System.Data;
+using System.Collections.Generic;
 
 public sealed class CheckoutRepository : ICheckoutRepository
 {
@@ -54,11 +55,20 @@ public sealed class CheckoutRepository : ICheckoutRepository
             );
     }
 
-    public Task<CheckoutSummaryDto> GetSummaryAsync(long userId)
-        => _db.QuerySingleAsync<CheckoutSummaryDto>(
+    public Task<CheckoutSummaryDto?> GetSummaryAsync(long userId)
+        => _db.QueryFirstOrDefaultAsync<CheckoutSummaryDto>(
             "SP_Checkout_GetSummary",
             new { UserId = userId },
             commandType: CommandType.StoredProcedure);
+
+    public async Task<IReadOnlyList<CheckoutItemDto>> GetOpenCheckoutItemsAsync(long userId)
+    {
+        var rows = await _db.QueryAsync<CheckoutItemDto>(
+            "SP_Checkout_GetOpenItems",
+            new { UserId = userId },
+            commandType: CommandType.StoredProcedure);
+        return rows.ToList();
+    }
 
     public async Task<long> ConfirmCodAsync(
         long userId, long checkoutTransactionId)

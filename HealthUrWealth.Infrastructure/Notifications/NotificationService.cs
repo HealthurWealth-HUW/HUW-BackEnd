@@ -2,6 +2,7 @@
 using HealthUrWelath.Application.Notifications.Models;
 using HealthUrWelath.Infrastructure.Notifications.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace HealthUrWealth.Infrastructure.Notifications
 {
@@ -9,16 +10,19 @@ namespace HealthUrWealth.Infrastructure.Notifications
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ITemplateRenderer _templateRenderer;
+        private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
            IServiceProvider serviceProvider,
-            ITemplateRenderer templateRenderer)
+            ITemplateRenderer templateRenderer,
+            ILogger<NotificationService> logger)
         {
             _serviceProvider = serviceProvider;
             _templateRenderer = templateRenderer;
+            _logger = logger;
         }
 
-        public async Task SendAsync(NotificationRequest request)
+        public async Task<bool> SendAsync(NotificationRequest request)
         {
             try
             {
@@ -62,10 +66,21 @@ namespace HealthUrWealth.Infrastructure.Notifications
 
                 if (tasks.Count > 0)
                     await Task.WhenAll(tasks);
+
+                return true;
             }
             catch (Exception ex)
             {
+                _logger.LogError(
+                    ex,
+                    "Notification dispatch failed. Channel={Channel} Mobile={Mobile} Email={Email} EmailTemplate={EmailTemplate} SmsTemplate={SmsTemplate}",
+                    request.Channel,
+                    request.Mobile,
+                    request.Email,
+                    request.EmailTemplateKey,
+                    request.SmsTemplateKey);
 
+                return false;
             }
         }
 

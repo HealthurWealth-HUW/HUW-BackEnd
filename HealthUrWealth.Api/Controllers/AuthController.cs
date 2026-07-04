@@ -1,4 +1,5 @@
-﻿using HealthUrWealth.Api.Contracts.Auth;
+﻿using HealthUrWealth.Api.Common;
+using HealthUrWealth.Api.Contracts.Auth;
 using HealthUrWelath.Application.Authentication.Commands;
 using HealthUrWelath.Application.Authentication.Dtos;
 using MediatR;
@@ -30,23 +31,33 @@ namespace HealthUrWealth.Api.Controllers
         }
 
         [HttpPost("request-otp")]
-        public Task<OtpResultDto> RequestOtp(
+        public async Task<ApiResponse<OtpResultDto>> RequestOtp(
     [FromBody] RequestOtpRequest req)
         {
-            return _mediator.Send(
+            var result = await _mediator.Send(
                 new RequestOtp.Command(req.Mobile));
+
+            return ApiResponse<OtpResultDto>.Ok(
+                result,
+                "OTP sent successfully.",
+                traceId: HttpContext.TraceIdentifier);
         }
 
         [HttpPost("verify-otp")]
-        public Task<AuthTokenDto> VerifyOtp(
+        public async Task<ApiResponse<AuthTokenDto>> VerifyOtp(
     [FromBody] VerifyOtpRequest request)
         {
-            return _mediator.Send(
+            var result = await _mediator.Send(
                 new VerifyOtp.Command(
                     request.Mobile,
                     request.Otp,
                     request.GuestId
                 ));
+
+            return ApiResponse<AuthTokenDto>.Ok(
+                result,
+                "Login successful.",
+                traceId: HttpContext.TraceIdentifier);
         }
     }
 }

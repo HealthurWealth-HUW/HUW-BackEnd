@@ -1,6 +1,7 @@
 ﻿using HealthUrWelath.Application.Authentication.Interfaces;
 using HealthUrWelath.Application.Checkout.Dtos;
 using HealthUrWelath.Application.Checkout.Interfaces;
+using HealthUrWelath.Application.Common.Exceptions;
 using MediatR;
 
 namespace HealthUrWelath.Application.Checkout.Queries
@@ -28,7 +29,8 @@ namespace HealthUrWelath.Application.Checkout.Queries
                 Query request,
                 CancellationToken ct)
             {
-                return await _repo.GetSummaryAsync(_user.UserId);
+                return await _repo.GetSummaryAsync(_user.UserId)
+                    ?? throw new AppException("No checkout in progress.", 404);
             }
         }
 

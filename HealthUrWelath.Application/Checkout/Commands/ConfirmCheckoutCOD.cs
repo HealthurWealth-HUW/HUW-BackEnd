@@ -1,11 +1,13 @@
 ﻿using HealthUrWelath.Application.Authentication.Interfaces;
 using HealthUrWelath.Application.Checkout.Interfaces;
+using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Notifications.Interfaces;
 using HealthUrWelath.Application.Notifications.Models;
 using HealthUrWelath.Application.Notifications.Templates;
 using HealthUrWelath.Application.Orders.Interfaces;
 using HealthUrWelath.Application.Users.Interfaces;
 using MediatR;
+using Microsoft.Data.SqlClient;
 using System.Text;
 
 namespace HealthUrWelath.Application.Checkout.Commands
@@ -38,9 +40,23 @@ namespace HealthUrWelath.Application.Checkout.Commands
                 Command request,
                 CancellationToken ct)
             {
-                // Confirm COD
-                var PaymentTransactionId = await _repo.ConfirmCodAsync(
-                    _user.UserId, request.CheckoutTransactionId);
+                // Resolve the latest open checkout for this user.
+                // The txnId in the request may be stale (e.g. another tab called /checkout/start
+                // after this one did, which marks this tab's txnId as 'Stale' in the DB).
+                // Using the current open checkout ensures the correct snapshot is always confirmed.
+                var openCheckout = await _repo.GetSummaryAsync(_user.UserId)
+                    ?? throw new AppException("No open checkout found. Please go back and restart checkout.", 409);
+
+                long PaymentTransactionId;
+                try
+                {
+                    PaymentTransactionId = await _repo.ConfirmCodAsync(
+                        _user.UserId, openCheckout.PaymentTransactionId);
+                }
+                catch (SqlException ex)
+                {
+                    throw new AppException(ex.Message, 409);
+                }
 
                 // Get user
                 var user = await _userRepo.GetByIdAsync(

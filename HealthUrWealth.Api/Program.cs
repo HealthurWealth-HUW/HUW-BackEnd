@@ -1,4 +1,6 @@
-﻿using HealthUrWealth.Infrastructure.Addresses;
+﻿using FluentValidation;
+using HealthUrWealth.Api.Middleware;
+using HealthUrWealth.Infrastructure.Addresses;
 using HealthUrWealth.Infrastructure.Authentication.Jwt;
 using HealthUrWealth.Infrastructure.Authentication.Repositories;
 using HealthUrWealth.Infrastructure.BlueDart;
@@ -21,6 +23,7 @@ using HealthUrWelath.Application.BlueDart.Dtos;
 using HealthUrWelath.Application.BlueDart.Interfaces;
 using HealthUrWelath.Application.Cart.Interfaces;
 using HealthUrWelath.Application.Checkout.Interfaces;
+using HealthUrWelath.Application.Common.Behaviors;
 using HealthUrWelath.Application.Common.Caching;
 using HealthUrWelath.Application.Common.CDN;
 using HealthUrWelath.Application.Common.Interfaces;
@@ -31,10 +34,13 @@ using HealthUrWelath.Application.Orders.Interfaces;
 using HealthUrWelath.Application.Payments.Interfaces;
 using HealthUrWelath.Application.Users.Interfaces;
 using HealthUrWelath.Infrastructure.Notifications.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -43,33 +49,42 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-//builder.Host.UseSerilog((ctx, lc) =>
-//{
-//    lc.MinimumLevel.Error() // 🔥 log only exceptions
-//      .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
-//      //.MinimumLevel.Override("System", LogEventLevel.Warning)
-//      .Enrich.FromLogContext()
-//      .WriteTo.File(
-//          path: "logs/log-.txt",
-//          rollingInterval: RollingInterval.Day,
-//          retainedFileCountLimit: 30, // 🔥 keep only 30 days
-//          shared: true
-//      );
-//});
+var loggingEnabled = builder.Configuration.GetValue<bool>("AppLogging:Enabled");
+var minLevelStr = builder.Configuration.GetValue("AppLogging:MinimumLevel", "Information");
+var logFilePath = builder.Configuration.GetValue("AppLogging:FilePath", "logs/log-.txt");
+var retainedDays = builder.Configuration.GetValue("AppLogging:RetainedDays", 30);
+
+Enum.TryParse<LogEventLevel>(minLevelStr, out var minLevel);
+
+builder.Host.UseSerilog((ctx, lc) =>
+{
+    lc.MinimumLevel.Is(minLevel)
+      .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+      .MinimumLevel.Override("System", LogEventLevel.Warning)
+      .Enrich.FromLogContext()
+      .WriteTo.Console();
+
+    if (loggingEnabled)
+    {
+        lc.WriteTo.File(
+            path: logFilePath!,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: retainedDays,
+            shared: true
+        );
+    }
+});
 
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(
         typeof(HealthUrWelath.Application.AssemblyReference).Assembly));
 
-//builder.Services.AddValidatorsFromAssembly(
-//    typeof(HealthUrWelath.Application.AssemblyReference).Assembly);
+builder.Services.AddValidatorsFromAssembly(
+    typeof(HealthUrWelath.Application.AssemblyReference).Assembly);
 
-//builder.Services.AddTransient(
-//    typeof(IPipelineBehavior<,>),
-//    typeof(ValidationBehavior<,>));
-
-
-//builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>));
 
 
 //DB 
@@ -269,7 +284,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-//app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.MapControllers();
 

@@ -6,7 +6,7 @@ namespace HealthUrWelath.Application.Cart.Commands
 {
     public static class RemoveCoupon
     {
-        public sealed record Command(long CartId) : IRequest;
+        public sealed record Command : IRequest;
 
         public sealed class Handler : IRequestHandler<Command>
         {
@@ -21,9 +21,10 @@ namespace HealthUrWelath.Application.Cart.Commands
 
             public async Task Handle(Command q, CancellationToken ct)
             {
-                var userId = _userContext.UserId;
+                // Resolve the caller's own cart server-side — never trust a client-supplied CartId here.
+                var cartId = await _repo.GetOrCreateCartAsync(_userContext.UserId, null);
 
-                await _repo.RemoveCouponAsync(q.CartId, userId);
+                await _repo.RemoveCouponAsync(cartId, _userContext.UserId);
             }
         }
     }

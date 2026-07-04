@@ -4,6 +4,7 @@ using HealthUrWelath.Application.Authentication.Interfaces;
 using HealthUrWelath.Application.BlueDart.Interfaces;
 using HealthUrWelath.Application.Checkout.Dtos;
 using HealthUrWelath.Application.Checkout.Interfaces;
+using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Common.Interfaces;
 using MediatR;
 
@@ -39,8 +40,10 @@ namespace HealthUrWelath.Application.Checkout.Commands
                 Command request,
                 CancellationToken ct)
             {
-                var address=  _addressRepository.GetByUserAsync(_user.UserId, request.checkoutDto.ShippingAddressId).Result.Single();
-               
+                var addresses = await _addressRepository.GetByUserAsync(_user.UserId, request.checkoutDto.ShippingAddressId);
+                var address = addresses.FirstOrDefault()
+                    ?? throw new AppException("Shipping address not found.", 422);
+
                 var eddData = await _blueDartsvc.GetEDD(address.PinCode);
 
                 // Ensure we never pass an uninitialized DateTime (SQL DateTime minimum is 1753)

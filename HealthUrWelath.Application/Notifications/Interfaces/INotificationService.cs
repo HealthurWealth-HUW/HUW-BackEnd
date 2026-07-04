@@ -4,6 +4,7 @@ namespace HealthUrWelath.Application.Notifications.Interfaces
 {
     public interface INotificationService
     {
-        Task SendAsync(NotificationRequest request);
+        /// <returns>true if the notification was dispatched to all requested channels; false if it failed (the failure is logged internally).</returns>
+        Task<bool> SendAsync(NotificationRequest request);
     }
 }

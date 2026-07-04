@@ -3,6 +3,7 @@ using HealthUrWelath.Infrastructure.Notifications.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Linq;
 
 namespace HealthUrWealth.Infrastructure.Notifications.Email
 {
@@ -41,10 +42,10 @@ namespace HealthUrWealth.Infrastructure.Notifications.Email
                     email = _config["BrevoEmail:FromEmail"],
                     name = _config["BrevoEmail:FromName"]
                 },
-                to = new[]
-                {
-                new { email = message.To }
-            },
+                to = message.To
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(e => new { email = e })
+                    .ToArray(),
                 subject = message.Subject,
                 htmlContent = message.IsHtml ? message.Body : null,
                 textContent = message.IsHtml ? null : message.Body,

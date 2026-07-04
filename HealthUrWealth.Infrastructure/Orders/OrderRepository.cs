@@ -48,11 +48,11 @@ namespace HealthUrWealth.Infrastructure.Orders
             };
         }
 
-        public async Task<OrderStatusTimelineDto> GetOrderTimelineAsync(long paymentTransactionId)
+        public async Task<OrderStatusTimelineDto> GetOrderTimelineAsync(long paymentTransactionId, long userId)
         {
             return await _db.QueryFirstOrDefaultAsync<OrderStatusTimelineDto>(
                     "SP_Order_GetStatusTimeline",
-                    new { PaymentTransactionId = paymentTransactionId },
+                    new { PaymentTransactionId = paymentTransactionId, UserId = userId },
                     commandType: CommandType.StoredProcedure);
         }
     }

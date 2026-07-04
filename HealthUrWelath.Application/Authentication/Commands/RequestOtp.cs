@@ -1,8 +1,10 @@
 ﻿using HealthUrWelath.Application.Authentication.Dtos;
 using HealthUrWelath.Application.Authentication.Interfaces;
+using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Notifications.Interfaces;
 using HealthUrWelath.Application.Notifications.Models;
 using HealthUrWelath.Application.Notifications.Templates;
+using HealthUrWelath.Application.Users.Dtos;
 using HealthUrWelath.Application.Users.Interfaces;
 using MediatR;
 using System.Security.Cryptography;
@@ -39,9 +41,18 @@ namespace HealthUrWelath.Application.Authentication.Commands
                 var (mobile, email) = Parse(cmd.Mobile);
 
                 // 2️) Get or create user (OTP-first rule)
-                var user = await _users.GetOrCreateByMobileAsync(
-                    mobile,
-                    email);
+                UserDto user;
+                try
+                {
+                    user = await _users.GetOrCreateByMobileAsync(mobile, email);
+                }
+                catch (Exception ex)
+                {
+                    throw new AppException(
+                        "We couldn't process your request right now. Please try again in a moment.",
+                        503,
+                        ex);
+                }
 
                 // 3️) Generate OTP
                 var otp = RandomNumberGenerator
@@ -49,10 +60,20 @@ namespace HealthUrWelath.Application.Authentication.Commands
                     .ToString("D6");
 
                 // 4️) Persist OTP
-                await _otp.SaveAsync(user.UserId, otp);
+                try
+                {
+                    await _otp.SaveAsync(user.UserId, otp);
+                }
+                catch (Exception ex)
+                {
+                    throw new AppException(
+                        "Unable to generate an OTP at this time. Please try again.",
+                        503,
+                        ex);
+                }
 
                 // 5️) Notify user
-                await _notify.SendAsync(new NotificationRequest
+                var sent = await _notify.SendAsync(new NotificationRequest
                 {
                     EmailTemplateKey = EmailTemplateKeys.OtpLogin,
                     SmsTemplateKey = SmsTemplateKeys.OtpLogin,
@@ -65,6 +86,11 @@ namespace HealthUrWelath.Application.Authentication.Commands
                         ["OTP"] = otp
                     }
                 });
+
+                if (!sent)
+                    throw new AppException(
+                        "We couldn't send the OTP right now. Please try again in a moment.",
+                        502);
 
                 return new OtpResultDto
                 {

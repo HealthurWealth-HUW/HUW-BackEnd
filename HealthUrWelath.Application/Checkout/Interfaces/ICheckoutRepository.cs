@@ -17,7 +17,9 @@ namespace HealthUrWelath.Application.Checkout.Interfaces
              string currencyCode,
              string currencySymbol,
              decimal currencyValue);
-        Task<CheckoutSummaryDto> GetSummaryAsync(long userId);
+        Task<CheckoutSummaryDto?> GetSummaryAsync(long userId);
+
+        Task<IReadOnlyList<CheckoutItemDto>> GetOpenCheckoutItemsAsync(long userId);
 
         Task<long> ConfirmCodAsync(long userId, long checkoutTransactionId);
     }

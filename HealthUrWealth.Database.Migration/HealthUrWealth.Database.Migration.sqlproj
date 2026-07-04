@@ -64,4 +64,8 @@
   <ItemGroup>
     <None Include="db_Zon_Huw_Live_Update.publish.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <Build Include="SP_UserAddress_Add.sql" />
+    <Build Include="HUW DB script.sql" />
+  </ItemGroup>
 </Project>

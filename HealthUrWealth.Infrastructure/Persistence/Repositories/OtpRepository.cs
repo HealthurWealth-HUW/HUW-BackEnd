@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using HealthUrWelath.Application.Authentication.Dtos;
 using HealthUrWelath.Application.Authentication.Interfaces;
 using System.Data;
 
@@ -25,12 +26,22 @@ namespace HealthUrWealth.Infrastructure.Persistence.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task<long> ValidateAsync(string mobile, string otp)
+        public async Task<OtpValidationResult> ValidateAsync(
+            string mobile,
+            string otp,
+            int maxAttempts,
+            int lockoutMinutes)
         {
-            return await _db.ExecuteScalarAsync<long>(
-         "SP_UserOtp_Validate",
-         new { Mobile = mobile, OtpCode = otp },
-         commandType: CommandType.StoredProcedure);
+            return await _db.QueryFirstAsync<OtpValidationResult>(
+                "SP_UserOtp_Validate",
+                new
+                {
+                    Mobile = mobile,
+                    OtpCode = otp,
+                    MaxAttempts = maxAttempts,
+                    LockoutMinutes = lockoutMinutes
+                },
+                commandType: CommandType.StoredProcedure);
         }
     }
 }
