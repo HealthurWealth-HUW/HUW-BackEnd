@@ -7,6 +7,7 @@ using HealthUrWelath.Application.Checkout.Interfaces;
 using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Common.Interfaces;
 using MediatR;
+using Microsoft.Data.SqlClient;
 
 namespace HealthUrWelath.Application.Checkout.Commands
 {
@@ -51,17 +52,29 @@ namespace HealthUrWelath.Application.Checkout.Commands
                     ?? eddData.DeliveryDateWhenNoEDD
                     ?? DateTime.UtcNow.AddDays(4);
 
-                var txnId = await _repo.UpsertAndCalculateAsync(
-                    _user.UserId,
-                    request.checkoutDto.PaymentMode,
+                long txnId;
+                try
+                {
+                    txnId = await _repo.UpsertAndCalculateAsync(
+                        _user.UserId,
+                        request.checkoutDto.PaymentMode,
 
-                    request.checkoutDto.BillingAddressId,
-                    request.checkoutDto.ShippingAddressId,
-                    expectedDelivery,
+                        request.checkoutDto.BillingAddressId,
+                        request.checkoutDto.ShippingAddressId,
+                        expectedDelivery,
 
-                    _currency.CurrencyCode,
-                    _currency.CurrencySymbol,
-                    _currency.CurrencyValue);
+                        _currency.CurrencyCode,
+                        _currency.CurrencySymbol,
+                        _currency.CurrencyValue);
+                }
+                catch (SqlException ex)
+                {
+                    // SP_Checkout_UpsertAndCalculate raises business errors (e.g. "Cart is empty",
+                    // "No active cart found") via RAISERROR instead of returning a result — surface
+                    // those as clean 409s instead of an unhandled 500.
+                    throw new AppException(ex.Message, 409);
+                }
+
                 return new CheckoutResultDto(txnId);
             }
         }

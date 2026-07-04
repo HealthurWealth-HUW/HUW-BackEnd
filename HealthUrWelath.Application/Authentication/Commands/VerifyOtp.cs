@@ -87,9 +87,9 @@ namespace HealthUrWelath.Application.Authentication.Commands
 
                         if (result.UserId == 0)
                         {
-                            var message = result.AttemptsRemaining > 0
-                                ? $"Invalid or expired OTP. {result.AttemptsRemaining} attempt(s) remaining."
-                                : "Invalid or expired OTP.";
+                            var message = result.IsExpired
+                                ? "OTP Expired, Please Regenerate OTP."
+                                : "Please enter correct OTP.";
 
                             throw new UnauthorizedAccessException(message);
                         }
