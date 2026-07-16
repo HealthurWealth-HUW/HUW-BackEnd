@@ -53,8 +53,12 @@ namespace HealthUrWelath.Application.Checkout.Commands
                     PaymentTransactionId = await _repo.ConfirmCodAsync(
                         _user.UserId, openCheckout.PaymentTransactionId);
                 }
-                catch (SqlException ex)
+                catch (SqlException ex) when (ex.Number == 50000)
                 {
+                    // Only intercept SP_Checkout_ConfirmCod's ad-hoc RAISERROR (error number
+                    // 50000); other SqlExceptions are real infra failures and should fall
+                    // through to GlobalExceptionMiddleware instead of being mislabeled as a
+                    // business conflict.
                     throw new AppException(ex.Message, 409);
                 }
 

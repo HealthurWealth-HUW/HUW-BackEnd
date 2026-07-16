@@ -2,7 +2,7 @@
 {
     public interface IPaymentRepository
     {
-        Task MarkPaymentFailedAsync(
+        Task<long?> MarkPaymentFailedAsync(
             long userId,
             long paymentTransactionId,
             string paymentMode,

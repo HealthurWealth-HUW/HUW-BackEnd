@@ -109,9 +109,6 @@ namespace HealthUrWealth.Infrastructure.Cart
                 new { CartId = cartId, UserId = userId, CouponCode = couponCode },
                 commandType: CommandType.StoredProcedure);
 
-            if (result == null)
-                return null;
-
             return result;
         }
 

@@ -3,6 +3,7 @@ using HealthUrWealth.Api.Common;
 using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Notifications.Models;
 using HealthUrWelath.Infrastructure.Notifications.Interfaces;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System.Text.Json;
@@ -83,6 +84,16 @@ namespace HealthUrWealth.Api.Middleware
                 case UnauthorizedAccessException unauthorizedEx:
                     statusCode = 401;
                     response = ApiResponse<object>.Fail(unauthorizedEx.Message, statusCode, traceId: traceId);
+                    break;
+
+                // Catches raw SqlExceptions that bubbled up from a repository without a
+                // local try/catch (the common case - repositories no longer need to
+                // translate business-rule RAISERRORs themselves). Known error numbers get
+                // a clean, user-safe message; anything unrecognized falls through to the
+                // same generic 500 as an unmapped exception below.
+                case SqlException sqlEx when SqlErrorTranslator.Translate(sqlEx) is { } translated:
+                    statusCode = translated.StatusCode;
+                    response = ApiResponse<object>.Fail(translated.Message, statusCode, traceId: traceId);
                     break;
 
                 default:

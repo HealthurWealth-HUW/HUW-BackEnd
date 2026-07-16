@@ -67,11 +67,13 @@ namespace HealthUrWelath.Application.Checkout.Commands
                         _currency.CurrencySymbol,
                         _currency.CurrencyValue);
                 }
-                catch (SqlException ex)
+                catch (SqlException ex) when (ex.Number == 50000)
                 {
                     // SP_Checkout_UpsertAndCalculate raises business errors (e.g. "Cart is empty",
                     // "No active cart found") via RAISERROR instead of returning a result — surface
-                    // those as clean 409s instead of an unhandled 500.
+                    // those as clean 409s instead of an unhandled 500. Only intercept RAISERROR's
+                    // ad-hoc error number (50000); other SqlExceptions (deadlocks, timeouts, etc.)
+                    // are real infra failures and should fall through to GlobalExceptionMiddleware.
                     throw new AppException(ex.Message, 409);
                 }
 

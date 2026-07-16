@@ -13,13 +13,13 @@ namespace HealthUrWealth.Infrastructure.Payments
             _db = db;
         }
 
-        public async Task MarkPaymentFailedAsync(
+        public async Task<long?> MarkPaymentFailedAsync(
                 long userId,
             long paymentTransactionId,
             string paymentMode,
             string gatewayTxnId)
         {
-            await _db.ExecuteAsync(
+            return await _db.QuerySingleOrDefaultAsync<long?>(
                 "SP_Payment_MarkFailed",
                 new
                 {
