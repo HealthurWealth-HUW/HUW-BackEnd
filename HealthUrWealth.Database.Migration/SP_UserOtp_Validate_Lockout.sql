@@ -55,7 +55,7 @@ BEGIN
 
     IF (@UserId = 0)
     BEGIN
-        SELECT 0 AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, 0 AS AttemptsRemaining;
+        SELECT 0 AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, 0 AS AttemptsRemaining, CAST(0 AS BIT) AS IsExpired;
         RETURN;
     END
 
@@ -73,7 +73,7 @@ BEGIN
     -- Still within an active lockout window
     IF (@LockedUntilUtc IS NOT NULL AND @LockedUntilUtc > SYSUTCDATETIME())
     BEGIN
-        SELECT 0 AS UserId, CAST(1 AS BIT) AS IsLocked, @LockedUntilUtc AS LockedUntilUtc, 0 AS AttemptsRemaining;
+        SELECT 0 AS UserId, CAST(1 AS BIT) AS IsLocked, @LockedUntilUtc AS LockedUntilUtc, 0 AS AttemptsRemaining, CAST(0 AS BIT) AS IsExpired;
         RETURN;
     END
 
@@ -103,10 +103,20 @@ BEGIN
         SET OtpFailedAttempts = 0, OtpLockedUntilUtc = NULL
         WHERE UserId = @UserId;
 
-        SELECT @UserId AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, @MaxAttempts AS AttemptsRemaining;
+        SELECT @UserId AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, @MaxAttempts AS AttemptsRemaining, CAST(0 AS BIT) AS IsExpired;
     END
     ELSE
     BEGIN
+        -- The code was right but is no longer usable (already consumed or past ExpiresAt),
+        -- as opposed to a code that was never issued to this user at all.
+        DECLARE @IsExpired BIT = CASE WHEN EXISTS
+        (
+            SELECT 1
+            FROM [dbo].[UserOtp]
+            WHERE UserId = @UserId
+              AND OtpHash = @OtpCode
+        ) THEN 1 ELSE 0 END;
+
         SET @FailedAttempts = @FailedAttempts + 1;
 
         IF (@FailedAttempts >= @MaxAttempts)
@@ -117,7 +127,7 @@ BEGIN
             SET OtpFailedAttempts = @FailedAttempts, OtpLockedUntilUtc = @LockedUntilUtc
             WHERE UserId = @UserId;
 
-            SELECT 0 AS UserId, CAST(1 AS BIT) AS IsLocked, @LockedUntilUtc AS LockedUntilUtc, 0 AS AttemptsRemaining;
+            SELECT 0 AS UserId, CAST(1 AS BIT) AS IsLocked, @LockedUntilUtc AS LockedUntilUtc, 0 AS AttemptsRemaining, @IsExpired AS IsExpired;
         END
         ELSE
         BEGIN
@@ -125,7 +135,7 @@ BEGIN
             SET OtpFailedAttempts = @FailedAttempts
             WHERE UserId = @UserId;
 
-            SELECT 0 AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, (@MaxAttempts - @FailedAttempts) AS AttemptsRemaining;
+            SELECT 0 AS UserId, CAST(0 AS BIT) AS IsLocked, CAST(NULL AS DATETIME2) AS LockedUntilUtc, (@MaxAttempts - @FailedAttempts) AS AttemptsRemaining, @IsExpired AS IsExpired;
         END
     END
 END;

@@ -67,5 +67,9 @@
   <ItemGroup>
     <Build Include="SP_UserAddress_Add.sql" />
     <Build Include="HUW DB script.sql" />
+    <Build Include="SP_Checkout_GetOpenItems.sql" />
+    <Build Include="SP_Order_IDOR_Fixes.sql" />
+    <Build Include="SP_UserOtp_Validate_Lockout.sql" />
+    <Build Include="SP_Payment_MarkFailed_NoThrowOnMissingCheckout.sql" />
   </ItemGroup>
 </Project>
