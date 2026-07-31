@@ -14,15 +14,18 @@ namespace HealthUrWelath.Application.Payments.Queries
             : IRequestHandler<Query, PayURequestDto>
         {
             private readonly ICheckoutRepository _checkoutRepo;
+            private readonly IPaymentRepository _paymentRepo;
             private readonly IPayUService _payUService;
             private readonly IUserContext _user;
 
             public Handler(
                 ICheckoutRepository checkoutRepo,
+                IPaymentRepository paymentRepo,
                 IPayUService payUService,
                 IUserContext user)
             {
                 _checkoutRepo = checkoutRepo;
+                _paymentRepo = paymentRepo;
                 _payUService = payUService;
                 _user = user;
             }
@@ -36,7 +39,13 @@ namespace HealthUrWelath.Application.Payments.Queries
                 if (checkout == null)
                     throw new Exception("No open checkout found");
 
-                return _payUService.GenerateRequest(checkout);
+                // Create the durable Pending PaymentTransactions row before handing off
+                // to the gateway - its id, not the checkout snapshot's, is what PayU
+                // gets back on success/failure. See SP_Payment_CreatePendingFromCheckout.
+                var paymentTransactionId = await _paymentRepo.CreatePendingFromCheckoutAsync(
+                    _user.UserId, checkout.PaymentTransactionId);
+
+                return _payUService.GenerateRequest(checkout, paymentTransactionId);
             }
         }
     }

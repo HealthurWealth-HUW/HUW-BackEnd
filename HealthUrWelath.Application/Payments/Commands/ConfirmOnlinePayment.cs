@@ -1,4 +1,5 @@
 ﻿using HealthUrWelath.Application.Authentication.Interfaces;
+using HealthUrWelath.Application.Common.Exceptions;
 using HealthUrWelath.Application.Notifications.Interfaces;
 using HealthUrWelath.Application.Notifications.Models;
 using HealthUrWelath.Application.Notifications.Templates;
@@ -6,6 +7,7 @@ using HealthUrWelath.Application.Orders.Interfaces;
 using HealthUrWelath.Application.Payments.Interfaces;
 using HealthUrWelath.Application.Users.Interfaces;
 using MediatR;
+using Microsoft.Data.SqlClient;
 using System.Numerics;
 using System.Text;
 
@@ -14,7 +16,7 @@ namespace HealthUrWelath.Application.Payments.Commands
     public static class ConfirmOnlinePayment
     {
         public sealed record Command(
-    long CheckoutTransactionId,
+    long PaymentTransactionId,
     string GatewayTransactionId,
     string PaymentMode
 ) : IRequest<long>;
@@ -43,13 +45,24 @@ namespace HealthUrWelath.Application.Payments.Commands
                 Command request,
                 CancellationToken cancellationToken)
             {
-                // Confirm Payment
-                var PaymentTransactionId = await _repo.ConfirmOnlinePaymentAsync(
-                       _user.UserId,
-                       request.CheckoutTransactionId,
-                       request.GatewayTransactionId,
-                       request.PaymentMode
-                   );
+                long PaymentTransactionId;
+                try
+                {
+                    // Confirm Payment
+                    PaymentTransactionId = await _repo.ConfirmOnlinePaymentAsync(
+                           _user.UserId,
+                           request.PaymentTransactionId,
+                           request.GatewayTransactionId,
+                           request.PaymentMode
+                       );
+                }
+                catch (SqlException ex) when (ex.Number == 50000)
+                {
+                    // SP_Payment_ConfirmOnlineSuccess raises this when no matching Pending
+                    // row exists for this id - already confirmed elsewhere, or an unknown/
+                    // stale id. A clean 409 instead of an unhandled 500.
+                    throw new AppException(ex.Message, 409);
+                }
 
                 // Get user
                 var user = await _userRepo.GetByIdAsync(

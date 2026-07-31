@@ -17,7 +17,7 @@ namespace HealthUrWealth.Infrastructure.Payments.PayU
             _config = config;
         }
 
-        public PayURequestDto GenerateRequest(CheckoutSummaryDto checkout)
+        public PayURequestDto GenerateRequest(CheckoutSummaryDto checkout, long paymentTransactionId)
         {
             var key = _config["PayU:Key"];
             var salt = _config["PayU:Salt"];
@@ -35,7 +35,7 @@ namespace HealthUrWealth.Infrastructure.Payments.PayU
 
             var hash = GenerateHash(
                 key,
-                checkout.PaymentTransactionId.ToString(),
+                paymentTransactionId.ToString(),
                 amountString,
                 productInfo,
                 checkout.FirstName,
@@ -45,7 +45,7 @@ namespace HealthUrWealth.Infrastructure.Payments.PayU
             var raw = string.Join("|", new[]
                 {
                     key,
-                    checkout.PaymentTransactionId.ToString(),
+                    paymentTransactionId.ToString(),
                     amountString,
                     productInfo?.Trim(),
                     checkout.FirstName?.Trim(),
@@ -62,7 +62,7 @@ namespace HealthUrWealth.Infrastructure.Payments.PayU
                 Key = key,
                 Hash = hash,
                 RawHash = raw,
-                TxnId = checkout.PaymentTransactionId.ToString(),
+                TxnId = paymentTransactionId.ToString(),
                 Amount = checkout.PayableAmount,
                 FirstName = checkout.FirstName,
                 Email = checkout.Email,

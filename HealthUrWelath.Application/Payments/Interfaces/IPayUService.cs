@@ -5,6 +5,6 @@ namespace HealthUrWelath.Application.Payments.Interfaces
 {
     public interface IPayUService
     {
-        PayURequestDto GenerateRequest(CheckoutSummaryDto checkout);
+        PayURequestDto GenerateRequest(CheckoutSummaryDto checkout, long paymentTransactionId);
     }
 }

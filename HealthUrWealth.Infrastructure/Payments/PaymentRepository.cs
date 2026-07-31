@@ -34,7 +34,7 @@ namespace HealthUrWealth.Infrastructure.Payments
 
         public async Task<long> ConfirmOnlinePaymentAsync(
     long userId,
-    long checkoutTxnId,
+    long paymentTransactionId,
     string gatewayTxnId,
     string paymentMode)
         {
@@ -43,7 +43,7 @@ namespace HealthUrWealth.Infrastructure.Payments
                 new
                 {
                     UserId = userId,
-                    CheckoutTxnId = checkoutTxnId,
+                    PaymentTransactionId = paymentTransactionId,
                     GatewayTransactionId = gatewayTxnId,
                     PaymentMode = paymentMode
                 },
@@ -51,6 +51,19 @@ namespace HealthUrWealth.Infrastructure.Payments
             );
 
             return result;
+        }
+
+        public async Task<long> CreatePendingFromCheckoutAsync(long userId, long checkoutTransactionId)
+        {
+            return await _db.QuerySingleAsync<long>(
+                "SP_Payment_CreatePendingFromCheckout",
+                new
+                {
+                    UserId = userId,
+                    CheckoutTransactionId = checkoutTransactionId
+                },
+                commandType: CommandType.StoredProcedure
+            );
         }
     }
 }
